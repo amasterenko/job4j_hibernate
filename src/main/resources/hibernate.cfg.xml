@@ -25,5 +25,7 @@
         <mapping class="ru.job4j.hibernate.modelslinks.Engine"/>
         <mapping class="ru.job4j.hibernate.modelslinks.Driver"/>
         <mapping class="ru.job4j.hibernate.hql.Candidate"/>
+        <mapping class="ru.job4j.hibernate.hql.Vacancy"/>
+        <mapping class="ru.job4j.hibernate.hql.VacBase"/>
     </session-factory>
 </hibernate-configuration>

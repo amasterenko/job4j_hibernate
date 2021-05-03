@@ -12,6 +12,9 @@ public class Candidate {
     private int experience;
     private float salary;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    private VacBase vacbase;
+
     public Candidate(String name, int experience, float salary) {
         this.name = name;
         this.experience = experience;
@@ -53,6 +56,14 @@ public class Candidate {
         this.salary = salary;
     }
 
+    public VacBase getVacBase() {
+        return vacbase;
+    }
+
+    public void setVacBase(VacBase vacbase) {
+        this.vacbase = vacbase;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -72,11 +83,11 @@ public class Candidate {
 
     @Override
     public String toString() {
-        return "Candidate{"
-                + "id=" + id
+        return "Candidate{id=" + id
                 + ", name='" + name + '\''
                 + ", experience=" + experience
                 + ", salary=" + salary
+                + ", vacBase=" + vacbase
                 + '}';
     }
 }

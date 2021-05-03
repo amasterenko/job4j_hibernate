@@ -11,62 +11,41 @@ public class HbmRun {
     public static void main(String[] args) {
         final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
                 .configure().build();
-        try {
-            SessionFactory sf = new MetadataSources(registry).buildMetadata().buildSessionFactory();
-            Session session = sf.openSession();
+        try (SessionFactory sf = new MetadataSources(registry)
+                .buildMetadata().buildSessionFactory();
+            Session session = sf.openSession()) {
+
             session.beginTransaction();
 
-            Candidate ivan = new Candidate("Ivan", 5, 2070.5f);
-            Candidate vadim = new Candidate("Vadim", 7, 3010.1f);
-            Candidate john = new Candidate("John", 2, 7565.0f);
+            Vacancy vac1 = new Vacancy("Java trainee");
+            Vacancy vac2 = new Vacancy("Java junior");
+            Vacancy vac3 = new Vacancy("JS junior");
+            session.save(vac1);
+            session.save(vac2);
+            session.save(vac3);
 
+            VacBase base1 = new VacBase("Java vacancies");
+            VacBase base2 = new VacBase("JS vacancies");
+            base1.addVacancy(vac1);
+            base1.addVacancy(vac2);
+            base2.addVacancy(vac3);
+            session.save(base1);
+            session.save(base2);
+
+            Candidate ivan = new Candidate("Ivan", 5, 2070.5f);
+            ivan.setVacBase(base1);
+            Candidate vadim = new Candidate("Vadim", 7, 3010.1f);
+            vadim.setVacBase(base2);
             session.save(ivan);
             session.save(vadim);
-            session.save(john);
 
-            Query selAllCandidates = session.createQuery("from Candidate ");
-            selAllCandidates.list().forEach(System.out::println);
-
-            Query selOneCandidate = session.createQuery("from Candidate c where c.id = :cId");
-            selOneCandidate.setParameter("cId", 2);
-            System.out.println(">>>selected by id: " + selOneCandidate.getSingleResult());
-
-            selOneCandidate = session.createQuery("from Candidate c where c.name = :cNm");
-            selOneCandidate.setParameter("cNm", "John");
-            System.out.println(">>>selected by name: " + selOneCandidate.getSingleResult());
-
-            Query updOneCandidate = session.createQuery(
-                    "update Candidate c set c.name = :cNm,"
-                            + " c.experience = :cExp,"
-                            + "c.salary = :cSl where c.id = :cId");
-            updOneCandidate.setParameter("cNm", "New Ivan");
-            updOneCandidate.setParameter("cExp", 10);
-            updOneCandidate.setParameter("cSl", 10000.4f);
-            updOneCandidate.setParameter("cId", 1);
-            int rsl = updOneCandidate.executeUpdate();
-            session.getTransaction().commit();
-            System.out.println(">>>candidates updated: " + rsl);
-
-            selOneCandidate = session.createQuery("from Candidate c where c.id = :cId");
-            selOneCandidate.setParameter("cId", 1);
-            Candidate updatedCandidate = (Candidate) selOneCandidate.getSingleResult();
-            session.refresh(updatedCandidate);
-            System.out.println(">>>updated candidate: " + updatedCandidate);
-
-            session.getTransaction().begin();
-            Query delOneCandidate = session.createQuery(
-                    "delete from Candidate c where c.id = :cId"
-            );
-            delOneCandidate.setParameter("cId", 3);
-            delOneCandidate.executeUpdate();
-
-            selOneCandidate = session.createQuery("from Candidate c where c.id = :cId");
-            selOneCandidate.setParameter("cId", 3);
-            System.out.println(">>>selected candidates after delete: "
-                    + selOneCandidate.list().size());
+            Query selCandidate = session.createQuery("select distinct c from Candidate c "
+                    + "join fetch c.vacbase b join fetch b.vacancies "
+                    + "where c.id = :cId", Candidate.class);
+            selCandidate.setParameter("cId", 1);
+            System.out.println(selCandidate.getSingleResult());
 
             session.getTransaction().commit();
-            session.close();
         }  catch (Exception e) {
             e.printStackTrace();
         } finally {
